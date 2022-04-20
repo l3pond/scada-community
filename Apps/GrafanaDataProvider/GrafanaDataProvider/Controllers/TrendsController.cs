@@ -405,17 +405,48 @@ namespace GrafanaDataProvider.Controllers
                         {
                             foreach (DateTime date in EachDay (GetDateFromUnixMs(fromMs), GetDateFromUnixMs(toMs)))
                             {
-                                Trend trend = GetTrend(UtcToLocalTime(date), cnlNum, isHour);
+                                int horaFrom = GetDateFromUnixMs(fromMs).Hour;
+                                Trend trend;
+
+                                if (horaFrom <= 3)
+                                {
+                                    trend = GetTrend(date, cnlNum, isHour);
+                                    Log.WriteInfo("Hora maior de 3");
+                                }
+                                else
+                                {
+                                    trend = GetTrend(UtcToLocalTime(date), cnlNum, isHour);
+                                    Log.WriteInfo("Hora menor de 3");
+                                }
 
                                 for (int i1 = 0; i1 < trend.Points.Count; i1++)
                                 {
-                                    long pointMs = GetUnixTimeMs(LocalToUtcTime(trend.Points[i1].DateTime));
+                                    long pointMs;
+
+                                    if (horaFrom <= 3)
+                                    {
+                                        pointMs = GetUnixTimeMs(trend.Points[i1].DateTime);
+                                    }
+                                    else
+                                    {
+                                        pointMs = GetUnixTimeMs(LocalToUtcTime(trend.Points[i1].DateTime));
+                                    }
+                                    
 
                                     if (pointMs >= fromMs && pointMs <= toMs)
                                     {
                                         if (i1 > 0)
                                         {
-                                            long prevMs = GetUnixTimeMs(LocalToUtcTime(trend.Points[i1 - 1].DateTime));
+                                            long prevMs;
+                                            if (horaFrom <= 3)
+                                            {
+                                                prevMs = GetUnixTimeMs(trend.Points[i1 - 1].DateTime);
+                                            }
+                                            else
+                                            {
+                                                prevMs = GetUnixTimeMs(LocalToUtcTime(trend.Points[i1 - 1].DateTime));
+                                            }
+                                            
 
                                             if (pointMs - prevMs > timeCoef * 60000)
                                             {
